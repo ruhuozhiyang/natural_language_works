@@ -8,35 +8,37 @@ import matplotlib.pyplot as plt
 from keras.utils.vis_utils import plot_model
 
 # 全局常量
-base_dir = '/Users/foiunclekay/Documents/GitHub/natural_language_works/image_classification'
-train_data_dir = base_dir + '/data/train'
-validation_data_dir = base_dir + '/data/validation'
-test_data_dir = base_dir + '/data/test'
-result_dir = base_dir + '/CNN/result'
+train_data_dir = '../data/train'
+validation_data_dir = '../data/validation'
+test_data_dir = '../data/test'
+result_dir = './result'
 
 train_iteration_count = 100
 val_iteration_count = 25
 epochs = 10
 batch_size = 20
-img_width, img_height = 50, 50
+img_width, img_height = 128, 128
 input_shape = (img_width, img_height, 3)
 
 # 模型的具体内容
 model = Sequential()
-model.add(Conv2D(32, (3, 3), padding="same", input_shape=input_shape))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+# 卷积层作为模型第一层时候，必须提供input_shape参数.
+model.add(Conv2D(16, (2, 2), padding="same", activation='relu', input_shape=input_shape))
+model.add(MaxPooling2D(pool_size=2))
+
+# Dropout应用于输入.包括在训练中每次更新时, 将输入单元的按比率随机设置为 0, 这有助于防止过拟合.
 model.add(Dropout(0.25))
-model.add(Conv2D(64, (3, 3), padding="same"))
-model.add(Activation('relu'))
-model.add(Conv2D(64, (3, 3), padding="same"))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25));
-model.add(Flatten())
-model.add(Dense(1024, activation='relu'))  # 全连接
-model.add(Dropout(0.5))
+model.add(Conv2D(32, (3, 3), padding="same", activation='relu'))
+model.add(MaxPooling2D(pool_size=2))
+
+model.add(Dropout(0.25))
+model.add(Conv2D(64, (3, 3), padding="same", activation='relu'))
+model.add(MaxPooling2D(pool_size=2))
+
+model.add(Flatten())  # 扁平层
+model.add(Dense(500, activation='relu'))  # 全连接
 model.add(Dense(2, activation='softmax'))
+# compile用于配置训练模型: adam的默认学习率为0.001、loss配置损失函数、metrics为模型评估标准.
 model.compile(loss='categorical_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])

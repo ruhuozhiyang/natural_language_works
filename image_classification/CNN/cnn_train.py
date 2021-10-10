@@ -1,64 +1,68 @@
+import keras.layers
+import matplotlib
+import matplotlib.pyplot as plt
+from keras.utils.vis_utils import plot_model
+import keras.backend as k
+from keras.callbacks import LearningRateScheduler
 from keras import optimizers
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D
-from keras.layers import Dropout, Flatten, Dense
+from keras.layers import Dropout, Flatten, Dense, Activation
 from keras.preprocessing.image import ImageDataGenerator
-import matplotlib
-
 matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-from keras.utils.vis_utils import plot_model
-import keras.backend as K
-from keras.callbacks import LearningRateScheduler
 
-
-def scheduler(epoch):
-    if epoch % 10 == 0 and epoch != 0:
-        lr = K.get_value(model.optimizer.lr)
-        K.set_value(model.optimizer.lr, lr * 0.1)
-    return K.get_value(model.optimizer.lr)
-
-
-reduce_lr = LearningRateScheduler(scheduler)
-
-# 全局常量
+# 数据路径
 train_data_dir = '../data/train'
 validation_data_dir = '../data/validation'
 test_data_dir = '../data/test'
 result_dir = './result'
 
-train_iteration_count = 100
-val_iteration_count = 25
-epochs = 50
-batch_size = 20
+# 图像大小
 img_width, img_height = 128, 128
-input_shape = (img_width, img_height, 3)
+
+# 超参数配置 epochs/batch_size很关键的两个参数.
+epochs = 50
+batch_size = 25
+train_iteration_count = 80
+val_iteration_count = 20
+
+
+def scheduler(epoch):
+    if epoch % 5 == 0 and epoch != 0:
+        lr = k.get_value(model.optimizer.lr)
+        k.set_value(model.optimizer.lr, lr * 0.1)
+    return k.get_value(model.optimizer.lr)
+
+
+reduce_lr = LearningRateScheduler(scheduler)
 
 # 模型的具体内容
 model = Sequential()
 # 卷积层作为模型第一层时候，必须提供input_shape参数.
-model.add(Conv2D(32, (2, 2), padding="same", activation='relu', input_shape=input_shape))
-model.add(MaxPooling2D(pool_size=2))
+model.add(Conv2D(16, (3, 3), padding="same", input_shape=(img_width, img_height, 3)))
+model.add(Activation('relu'))
+# model.add(keras.layers.BatchNormalization())
+model.add(MaxPooling2D(pool_size=(2, 2)))
 
-# Dropout应用于输入.包括在训练中每次更新时, 将输入单元的按比率随机设置为 0, 这有助于防止过拟合.
-model.add(Conv2D(64, (2, 2), padding="same", activation='relu'))
-model.add(MaxPooling2D(pool_size=2))
+model.add(Conv2D(32, (3, 3), padding="same"))
+model.add(Activation('relu'))
+# model.add(keras.layers.BatchNormalization())
+model.add(MaxPooling2D(pool_size=(2, 2)))
 
-# model.add(Conv2D(64, (2, 2), padding="same", activation='relu'))
-# model.add(MaxPooling2D(pool_size=2))
-#
-# model.add(Conv2D(128, (2, 2), padding="same", activation='relu'))
-# model.add(MaxPooling2D(pool_size=2))
+model.add(Conv2D(64, (3, 3), padding="same"))
+model.add(Activation('relu'))
+# model.add(keras.layers.BatchNormalization())
+model.add(MaxPooling2D(pool_size=(2, 2)))
 
 model.add(Flatten())  # 扁平层
-model.add(Dropout(0.5))
+model.add(Dropout(0.25))
 model.add(Dense(1024, activation='relu'))  # 全连接
 model.add(Dense(2, activation='softmax'))
 
 # compile用于配置训练模型: adam的默认学习率为0.001、loss配置损失函数、metrics为模型评估标准.
-# adam = optimizers.adam_v2.Adam(lr=1e-05)  # Keras更新了，调用方式变了
-model.compile(loss='binary_crossentropy',
-              optimizer='adam',
+adam = optimizers.adam_v2.Adam(lr=1e-4)  # Keras更新了，调用方式变了
+model.compile(loss='categorical_crossentropy',
+              optimizer=adam,
               metrics=['accuracy'])
 plot_model(model, to_file=result_dir + '/model.png')
 
@@ -94,7 +98,7 @@ result = model.fit(
     epochs=epochs,
     validation_data=validation_generator,
     validation_steps=val_iteration_count,
-    callbacks=[reduce_lr])
+    callbacks=reduce_lr)
 
 # 测试模型、评估分数
 score = model.evaluate(test_generator, steps=5)

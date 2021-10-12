@@ -1,5 +1,5 @@
 from tensorflow.keras.callbacks import *
-from tensorflow.keras import backend as K
+from tensorflow.keras import backend as k
 import numpy as np
 
 
@@ -21,7 +21,7 @@ class CyclicLR(Callback):
                 self.scale_fn = lambda x: 1 / (2. ** (x - 1))
                 self.scale_mode = 'cycle'
             elif self.mode == 'exp_range':
-                self.scale_fn = lambda x: gamma ** (x)
+                self.scale_fn = lambda x: gamma ** x
                 self.scale_mode = 'iterations'
         else:
             self.scale_fn = scale_fn
@@ -58,9 +58,9 @@ class CyclicLR(Callback):
         logs = logs or {}
 
         if self.clr_iterations == 0:
-            K.set_value(self.model.optimizer.lr, self.base_lr)
+            k.set_value(self.model.optimizer.lr, self.base_lr)
         else:
-            K.set_value(self.model.optimizer.lr, self.clr())
+            k.set_value(self.model.optimizer.lr, self.clr())
 
     def on_batch_end(self, epoch, logs=None):
 
@@ -68,10 +68,10 @@ class CyclicLR(Callback):
         self.trn_iterations += 1
         self.clr_iterations += 1
 
-        self.history.setdefault('lr', []).append(K.get_value(self.model.optimizer.lr))
+        self.history.setdefault('lr', []).append(k.get_value(self.model.optimizer.lr))
         self.history.setdefault('iterations', []).append(self.trn_iterations)
 
-        for k, v in logs.items():
-            self.history.setdefault(k, []).append(v)
+        for key, v in logs.items():
+            self.history.setdefault(key, []).append(v)
 
-        K.set_value(self.model.optimizer.lr, self.clr())
+        k.set_value(self.model.optimizer.lr, self.clr())

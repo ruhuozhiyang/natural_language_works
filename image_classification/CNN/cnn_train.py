@@ -20,9 +20,9 @@ img_width, img_height = 128, 128
 
 # 超参数配置 epochs/batch_size很关键的两个参数.
 epochs = 100
-batch_size = 10
+batch_size = 25
 train_iteration_count = 200
-val_iteration_count = 50
+val_iteration_count = 20
 
 
 # def scheduler(epoch):

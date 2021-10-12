@@ -1,10 +1,7 @@
-import keras.layers
 import matplotlib
 import matplotlib.pyplot as plt
+from cyclic_lr import CyclicLR
 from keras.utils.vis_utils import plot_model
-import keras.backend as k
-from keras.callbacks import LearningRateScheduler
-from keras import optimizers
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dropout, Flatten, Dense, Activation
@@ -15,26 +12,27 @@ matplotlib.use('TkAgg')
 train_data_dir = '../data/train'
 validation_data_dir = '../data/validation'
 test_data_dir = '../data/test'
+
 result_dir = './result'
 
 # 图像大小
 img_width, img_height = 128, 128
 
 # 超参数配置 epochs/batch_size很关键的两个参数.
-epochs = 50
-batch_size = 25
-train_iteration_count = 80
-val_iteration_count = 20
+epochs = 100
+batch_size = 10
+train_iteration_count = 200
+val_iteration_count = 50
 
 
-def scheduler(epoch):
-    if epoch % 5 == 0 and epoch != 0:
-        lr = k.get_value(model.optimizer.lr)
-        k.set_value(model.optimizer.lr, lr * 0.1)
-    return k.get_value(model.optimizer.lr)
-
-
-reduce_lr = LearningRateScheduler(scheduler)
+# def scheduler(epoch):
+#     if epoch % 2 == 0 and epoch != 0:
+#         lr = k.get_value(model.optimizer.lr)
+#         k.set_value(model.optimizer.lr, lr * 0.1)
+#     return k.get_value(model.optimizer.lr)
+#
+#
+# reduce_lr = LearningRateScheduler(scheduler)
 
 # 模型的具体内容
 model = Sequential()
@@ -60,9 +58,9 @@ model.add(Dense(1024, activation='relu'))  # 全连接
 model.add(Dense(2, activation='softmax'))
 
 # compile用于配置训练模型: adam的默认学习率为0.001、loss配置损失函数、metrics为模型评估标准.
-adam = optimizers.adam_v2.Adam(lr=1e-4)  # Keras更新了，调用方式变了
+# adam = optimizers.adam_v2.Adam(lr=1e-3)  # Keras更新了，调用方式变了
 model.compile(loss='categorical_crossentropy',
-              optimizer=adam,
+              optimizer='adam',
               metrics=['accuracy'])
 plot_model(model, to_file=result_dir + '/model.png')
 
@@ -89,6 +87,8 @@ test_generator = test_augment.flow_from_directory(
     batch_size=batch_size,
     class_mode='categorical')
 
+clr = CyclicLR(base_lr=0.0005, max_lr=0.001, step_size=2000, mode='triangular')
+
 # 训练模型
 # epochs为训练模型迭代轮次.一个轮次是在整个 x 和 y 上的一轮迭代.
 # validation为用来评估当前模型损失，模型将不会在这个数据上进行训练.
@@ -98,7 +98,7 @@ result = model.fit(
     epochs=epochs,
     validation_data=validation_generator,
     validation_steps=val_iteration_count,
-    callbacks=reduce_lr)
+    callbacks=clr)
 
 # 测试模型、评估分数
 score = model.evaluate(test_generator, steps=5)

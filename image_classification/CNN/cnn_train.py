@@ -12,10 +12,9 @@ matplotlib.use('TkAgg')
 train_data_dir = '../data/train'
 validation_data_dir = '../data/validation'
 test_data_dir = '../data/test'
-
 result_dir = './result'
 
-# 图像大小
+# 载入图像大小
 img_width, img_height = 128, 128
 
 # 超参数配置 epochs/batch_size很关键的两个参数.
@@ -24,32 +23,19 @@ batch_size = 25
 train_iteration_count = 200
 val_iteration_count = 20
 
-
-# def scheduler(epoch):
-#     if epoch % 2 == 0 and epoch != 0:
-#         lr = k.get_value(model.optimizer.lr)
-#         k.set_value(model.optimizer.lr, lr * 0.1)
-#     return k.get_value(model.optimizer.lr)
-#
-#
-# reduce_lr = LearningRateScheduler(scheduler)
-
 # 模型的具体内容
 model = Sequential()
 # 卷积层作为模型第一层时候，必须提供input_shape参数.
 model.add(Conv2D(16, (3, 3), padding="same", input_shape=(img_width, img_height, 3)))
 model.add(Activation('relu'))
-# model.add(keras.layers.BatchNormalization())
 model.add(MaxPooling2D(pool_size=(2, 2)))
 
 model.add(Conv2D(32, (3, 3), padding="same"))
 model.add(Activation('relu'))
-# model.add(keras.layers.BatchNormalization())
 model.add(MaxPooling2D(pool_size=(2, 2)))
 
 model.add(Conv2D(64, (3, 3), padding="same"))
 model.add(Activation('relu'))
-# model.add(keras.layers.BatchNormalization())
 model.add(MaxPooling2D(pool_size=(2, 2)))
 
 model.add(Flatten())  # 扁平层
@@ -58,7 +44,6 @@ model.add(Dense(1024, activation='relu'))  # 全连接
 model.add(Dense(2, activation='softmax'))
 
 # compile用于配置训练模型: adam的默认学习率为0.001、loss配置损失函数、metrics为模型评估标准.
-# adam = optimizers.adam_v2.Adam(lr=1e-3)  # Keras更新了，调用方式变了
 model.compile(loss='categorical_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])
@@ -123,5 +108,3 @@ plt.show()
 
 json_string = model.to_json()
 open(result_dir + '/model_architecture.json', 'w').write(json_string)
-
-# model.save_weights(result_dir + '/model_weights.h5')

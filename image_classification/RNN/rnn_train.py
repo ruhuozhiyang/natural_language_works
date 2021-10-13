@@ -3,7 +3,7 @@ from torch import nn
 
 
 class RnnClassify(nn.Module):
-    def __init__(self, in_feature=28, hidden_feature=100, num_class=2, num_layers=2):
+    def __init__(self, in_feature=128, hidden_feature=100, num_class=2, num_layers=2):
         super(RnnClassify, self).__init__()
         self.rnn = nn.LSTM(in_feature, hidden_feature, num_layers)  # 使用两层 lstm
         self.classifier = nn.Linear(hidden_feature, num_class)  # 将最后一个 rnn 的输出使用全连接得到最后的分类结果

@@ -1,6 +1,6 @@
 import matplotlib
 import matplotlib.pyplot as plt
-from cyclic_lr import CyclicLR
+from utils.cyclic_lr import CyclicLR
 from keras.utils.vis_utils import plot_model
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D

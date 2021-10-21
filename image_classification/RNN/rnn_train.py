@@ -14,11 +14,11 @@ means_3channels = [0.4853868, 0.45147458, 0.4142927]  # 预先使用程序utils.
 std_3channels = [0.22896309, 0.22360295, 0.22433776]
 
 # 超参数
-per_batch_size = 25  # 批量载入图片的个数
-epochs = 50  # 训练的轮次
+per_batch_size = 30  # 批量载入图片的个数
+epochs = 100  # 训练的轮次
 InputDim = img_width * 3  # 每个输入序列的维度（3通道图像）
 OutDim = 2  # 分类类别数
-Neurons = 150  # 每层权重个数
+Neurons = 50  # 每层权重个数
 Layers = 5  # RNN层数
 
 # 数据路径
@@ -77,7 +77,7 @@ class ImageRnn(nn.Module):
 
 model = ImageRnn(per_batch_size, InputDim, OutDim, Neurons, Layers).to(device)
 criterion = nn.CrossEntropyLoss()
-optimizer = opt.Adam(model.parameters(), lr=0.001)
+optimizer = opt.Adam(model.parameters(), lr=0.0001)
 
 
 def get_accuracy(log_it, target, batch_size):
@@ -117,7 +117,7 @@ for epoch in range(epochs):
         train_running_loss = train_running_loss + loss.detach().item()
         train_acc = train_acc + get_accuracy(outputs, labels, per_batch_size)
     model.eval()
-    msg = 'Epoch : {:0>2d} | Loss : {:<6.4f} | Train Accuracy : {:<6.2f}%'
-    print(msg.format(epoch, train_running_loss / index, train_acc / index))
+    msg = '[======================]Epoch : {} | Loss : {:<6.4f} | Train Accuracy : {:<6.2f}%'
+    print(msg.format(epoch+1, train_running_loss / index, train_acc / index))
 
 print('Final Validation Accuracy : {:<6.4f}%'.format(validation_accuracy()))

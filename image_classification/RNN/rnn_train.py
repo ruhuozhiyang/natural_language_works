@@ -1,7 +1,7 @@
 import torch
 import torchvision
 import torch.nn as nn
-import torch.optim.optimizer as opt
+import torch.optim as opt
 from torchvision.transforms import transforms
 from torch.utils.data import DataLoader
 
@@ -10,16 +10,16 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # 图像参数
 img_width = 128
 img_height = 128
-means_3channels = [0.4853868, 0.45147458, 0.4142927]
+means_3channels = [0.4853868, 0.45147458, 0.4142927]  # 预先使用程序utils.compute_means_std计算出来的
 std_3channels = [0.22896309, 0.22360295, 0.22433776]
 
 # 超参数
 per_batch_size = 25  # 批量载入图片的个数
-epochs = 1  # 训练的轮次
-InputDim = img_width * 3
-OutDim = 2
-Neurons = 150
-Layers = 3
+epochs = 50  # 训练的轮次
+InputDim = img_width * 3  # 每个输入序列的维度（3通道图像）
+OutDim = 2  # 分类类别数
+Neurons = 150  # 每层权重个数
+Layers = 5  # RNN层数
 
 # 数据路径
 train_data_path = '../data/train'
@@ -63,9 +63,6 @@ class ImageRnn(nn.Module):
         self.basic_rnn = nn.LSTM(self.input_dim, self.neurons, num_layers=self.layers)
         self.FC = nn.Linear(self.neurons, self.out_dim)
 
-    # def init_hidden(self):
-    #     return torch.zeros(self.layers, self.batch_size, self.neurons).to(device)
-
     # 是对RNN的一层封装，自定义组合RNN。
     def forward(self, data):
         self.batch_size = data.size(0)
@@ -74,18 +71,13 @@ class ImageRnn(nn.Module):
         # 前向传播，rnn_out是128个序列的输出值。
         rnn_out, _ = self.basic_rnn.forward(data)
         # 取RNN的最后一个序列，然后求出每一类概率.rnn_out的size为[75, 150] out为75*2
-        out = self.FC(rnn_out[-1])
+        out = self.FC(rnn_out[-1, :, :])
         return out.view(-1, self.out_dim)
 
 
 model = ImageRnn(per_batch_size, InputDim, OutDim, Neurons, Layers).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = opt.Adam(model.parameters(), lr=0.001)
-
-# 初始化模型的weight, eye返回一个二维张量，对角线为1，其他地方为0。
-# model.basic_rnn.weight_hh_l0.data = torch.eye(n=Neurons, m=Neurons).to(device)
-# model.basic_rnn.weight_hh_l1.data = torch.eye(n=Neurons, m=Neurons).to(device)
-# model.basic_rnn.weight_hh_l2.data = torch.eye(n=Neurons, m=Neurons).to(device)
 
 
 def get_accuracy(log_it, target, batch_size):

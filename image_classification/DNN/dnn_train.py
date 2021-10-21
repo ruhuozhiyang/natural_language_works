@@ -5,6 +5,7 @@ from keras.utils.vis_utils import plot_model
 from keras.models import Sequential
 from keras.layers import Dropout, Flatten, Dense
 from keras.preprocessing.image import ImageDataGenerator
+
 matplotlib.use('TkAgg')
 
 # 数据路径
@@ -20,18 +21,14 @@ img_width, img_height = 128, 128
 epochs = 100
 batch_size = 25
 train_iteration_count = 200
-val_iteration_count = 20
+val_iteration_count = 10
 
 # 模型的具体内容
 model = Sequential()
-
-model.add(Flatten())  # 扁平层
-model.add(Dropout(0.25))
-model.add(Dense(1024, activation='relu'))  # 全连接
-model.add(Dropout(0.25))
-model.add(Dense(1024, activation='relu'))  # 全连接
-model.add(Dropout(0.25))
-model.add(Dense(1024, activation='relu'))  # 全连接
+model.add(Flatten(input_shape=(img_width, img_height, 3)))
+model.add(Dense(10, activation='relu'))
+model.add(Dense(20, activation='relu'))  # 全连接
+model.add(Dense(40, activation='relu'))  # 全连接
 model.add(Dense(2, activation='softmax'))
 
 # compile用于配置训练模型: adam的默认学习率为0.001、loss配置损失函数、metrics为模型评估标准.

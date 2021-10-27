@@ -130,3 +130,5 @@ dmypy.json
 
 image_classification/data/
 image_classification/CNN/result/
+
+word_embedding/data/

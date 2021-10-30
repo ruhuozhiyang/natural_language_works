@@ -4,9 +4,17 @@ import torch.nn.functional as F
 import torch.optim as optimizer
 from tqdm import tqdm
 
-
 CONTEXT_SIZE = 3  # 上下文词个数
 EMBEDDING_DIM = 50  # 词向量维度
+
+print(torch.version)
+is_cuda = torch.cuda.is_available()
+if is_cuda:
+    device = torch.device("cuda")
+    print("GPU is available")
+else:
+    device = torch.device("cpu")
+    print("GPU not available, CPU used")
 
 with open('./data/en.txt') as f:
     content = f.read()
@@ -41,6 +49,7 @@ class NGramLanguageModeler(nn.Module):
 
 loss_function = nn.NLLLoss()
 model = NGramLanguageModeler(len(vocab), EMBEDDING_DIM, CONTEXT_SIZE)
+model.to(device)
 optimizer = optimizer.Adam(model.parameters(), lr=0.001)
 
 for epoch in range(10):
@@ -49,8 +58,10 @@ for epoch in range(10):
         for context, target in t:
             t.set_description('Epoch {}/10:'.format(epoch + 1))
             t.set_postfix(loss=total_loss)
-            context_tensor = torch.tensor([word2int[w] for w in context], dtype=torch.long)
-            target_tensor = torch.tensor([word2int[target]], dtype=torch.long)
+            context_tensor = torch.LongTensor([word2int[w] for w in context])
+            context_tensor.to(device)
+            target_tensor = torch.LongTensor([word2int[target]])
+            target_tensor.to(device)
             model.zero_grad()
             log_probs = model(context_tensor)
             loss = loss_function(log_probs, target_tensor)

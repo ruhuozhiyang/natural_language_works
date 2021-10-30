@@ -10,16 +10,11 @@ CONTEXT_SIZE = 3  # 上下文词个数
 EMBEDDING_DIM = 50  # 词向量维度
 per_batch_size = 50
 
-is_cuda = torch.cuda.is_available()
-if is_cuda:
-    device = torch.device("cuda")
-    print("GPU is available")
-else:
-    device = torch.device("cpu")
-    print("GPU not available, CPU used")
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+print(device)
 
 train_dataset = MyDataSet('en')
-vocab, word2int = train_dataset.build_dict()
+vocab_len = train_dataset.get_vocab_len()
 train_loader = DataLoader(dataset=train_dataset, batch_size=per_batch_size)
 
 
@@ -40,7 +35,7 @@ class NGramLanguageModeler(nn.Module):
 
 
 loss_function = nn.NLLLoss()
-model = NGramLanguageModeler(len(vocab), EMBEDDING_DIM, CONTEXT_SIZE)
+model = NGramLanguageModeler(vocab_len, EMBEDDING_DIM, CONTEXT_SIZE)
 model.to(device)
 optimizer = optimizer.Adam(model.parameters(), lr=0.001)
 
@@ -50,18 +45,19 @@ for epoch in range(10):
 
     with tqdm(train_dataset) as t:
         t.set_description('Epoch {}/10:'.format(epoch + 1))
-        t.set_postfix(loss=total_loss)
-        for index, (context, target) in enumerate(t):
-            context_tensor = torch.LongTensor([word2int[w] for w in context])
-            context_tensor.to(device)
-            target_tensor = torch.LongTensor([word2int[target]])
-            target_tensor.to(device)
+        for index, (context_tensor, target) in enumerate(t):
             model.zero_grad()
+            context_tensor = context_tensor.to(device)  # 这行代码气死我了
+            # print(context_tensor.is_cuda)
             log_probs = model(context_tensor)
+            target_tensor = torch.tensor([target], dtype=torch.long)
+            target_tensor = target_tensor.to(device)
+            # print(target_tensor)
             loss = loss_function(log_probs, target_tensor)
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
+            t.set_postfix(loss=total_loss)
 
 # To get the embedding of a particular word, e.g. "beauty"
-print(model.embeddings.weight[word2int["beauty"]])
+# print(model.embeddings.weight[word2int["beauty"]])

@@ -2,12 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optimizer
+from my_data_set import MyDataSet
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 CONTEXT_SIZE = 3  # 上下文词个数
 EMBEDDING_DIM = 50  # 词向量维度
+per_batch_size = 50
 
-print(torch.version)
 is_cuda = torch.cuda.is_available()
 if is_cuda:
     device = torch.device("cuda")
@@ -16,19 +18,9 @@ else:
     device = torch.device("cpu")
     print("GPU not available, CPU used")
 
-with open('./data/en.txt') as f:
-    content = f.read()
-    f.close()
-test_sentence = content.split()
-# we should tokenize the input, but we will ignore that for now
-ngrams = [
-    (
-        [test_sentence[i - j - 1] for j in range(CONTEXT_SIZE)], test_sentence[i]
-    )
-    for i in range(CONTEXT_SIZE, len(test_sentence))
-]
-vocab = set(test_sentence)  # 所有词汇（去除重复的）
-word2int = {word: i for i, word in enumerate(vocab)}  # 建立词典
+train_dataset = MyDataSet('en')
+vocab, word2int = train_dataset.build_dict()
+train_loader = DataLoader(dataset=train_dataset, batch_size=per_batch_size)
 
 
 class NGramLanguageModeler(nn.Module):
@@ -54,10 +46,12 @@ optimizer = optimizer.Adam(model.parameters(), lr=0.001)
 
 for epoch in range(10):
     total_loss = 0
-    with tqdm(ngrams) as t:
-        for context, target in t:
-            t.set_description('Epoch {}/10:'.format(epoch + 1))
-            t.set_postfix(loss=total_loss)
+    model.train()
+
+    with tqdm(train_dataset) as t:
+        t.set_description('Epoch {}/10:'.format(epoch + 1))
+        t.set_postfix(loss=total_loss)
+        for index, (context, target) in enumerate(t):
             context_tensor = torch.LongTensor([word2int[w] for w in context])
             context_tensor.to(device)
             target_tensor = torch.LongTensor([word2int[target]])

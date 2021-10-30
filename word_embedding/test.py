@@ -9,7 +9,11 @@
 #     print(res)
 
 
-with open('./data/en.txt') as f:
-    content = f.read()
-    f.close()
-print(content)
+# with open('./data/en.txt') as f:
+#     content = f.read()
+#     f.close()
+# print(content)
+
+from my_data_set import MyDataSet
+test = MyDataSet('en')
+print(len(test))

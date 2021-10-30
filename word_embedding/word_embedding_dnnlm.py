@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optimizer
+import test
 from my_data_set import MyDataSet
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -11,10 +12,9 @@ EMBEDDING_DIM = 50  # 词向量维度
 per_batch_size = 50
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-print(device)
 
 train_dataset = MyDataSet('en')
-vocab_len = train_dataset.get_vocab_len()
+vocab_len, vocab = train_dataset.get_vocab()
 train_loader = DataLoader(dataset=train_dataset, batch_size=per_batch_size)
 
 
@@ -39,7 +39,7 @@ model = NGramLanguageModeler(vocab_len, EMBEDDING_DIM, CONTEXT_SIZE)
 model.to(device)
 optimizer = optimizer.Adam(model.parameters(), lr=0.001)
 
-for epoch in range(10):
+for epoch in range(1):
     total_loss = 0
     model.train()
 
@@ -61,3 +61,13 @@ for epoch in range(10):
 
 # To get the embedding of a particular word, e.g. "beauty"
 # print(model.embeddings.weight[word2int["beauty"]])
+file_object = open('./result/result_vector.txt', 'w')
+int2word = test.get_int2word()
+for item in vocab:
+    file_object.write(int2word[int(item)])
+    file_object.write(' ')
+    # TypeError: can't convert cuda:0 device type tensor to numpy.
+    # Use Tensor.cpu() to copy the tensor to host memory first.
+    file_object.write(str(model.embeddings.weight[int(item)].cpu().detach().numpy().tolist()))
+    file_object.write('\n')
+file_object.close()

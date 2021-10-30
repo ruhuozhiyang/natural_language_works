@@ -26,6 +26,11 @@ for item in sentence2int:
         fileObject.write(' ')
 fileObject.close()
 
+
 # from my_data_set import MyDataSet
 # test = MyDataSet('en')
 # print(len(test))
+
+
+def get_int2word():
+    return int2word

@@ -31,5 +31,5 @@ class MyDataSet(Dataset):
         self.vocab = set(self.test_sentence)  # 所有词汇（去除重复的）
         # self.word2int = {word: i for i, word in enumerate(self.vocab)}  # 建立词典
 
-    def get_vocab_len(self):
-        return len(self.vocab)
+    def get_vocab(self):
+        return len(self.vocab), self.vocab

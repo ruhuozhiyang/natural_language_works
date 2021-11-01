@@ -10,6 +10,7 @@ from tqdm import tqdm
 CONTEXT_SIZE = 3  # 上下文词个数
 EMBEDDING_DIM = 50  # 词向量维度
 per_batch_size = 50
+epochs = 20
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -39,12 +40,12 @@ model = NGramLanguageModeler(vocab_len, EMBEDDING_DIM, CONTEXT_SIZE)
 model.to(device)
 optimizer = optimizer.Adam(model.parameters(), lr=0.001)
 
-for epoch in range(1):
+for epoch in range(epochs):
     total_loss = 0
     model.train()
 
     with tqdm(train_dataset) as t:
-        t.set_description('Epoch {}/10:'.format(epoch + 1))
+        t.set_description('Epoch {}/{}:'.format(epoch + 1, epochs))
         for index, (context_tensor, target) in enumerate(t):
             model.zero_grad()
             context_tensor = context_tensor.to(device)  # 这行代码气死我了
@@ -71,3 +72,4 @@ for item in vocab:
     file_object.write(str(model.embeddings.weight[int(item)].cpu().detach().numpy().tolist()))
     file_object.write('\n')
 file_object.close()
+torch.save(model, './result/result_model.model')

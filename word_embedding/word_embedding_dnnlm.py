@@ -2,21 +2,21 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optimizer
-import test
+import pre_process
 from my_data_set import MyDataSet
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+# 超参数
 CONTEXT_SIZE = 3  # 上下文词个数
 EMBEDDING_DIM = 50  # 词向量维度
 per_batch_size = 50
 epochs = 20
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
 train_dataset = MyDataSet('en')
 vocab_len, vocab = train_dataset.get_vocab()
-train_loader = DataLoader(dataset=train_dataset, batch_size=per_batch_size)
+# train_loader = DataLoader(dataset=train_dataset, batch_size=per_batch_size)
 
 
 class NGramLanguageModeler(nn.Module):
@@ -49,27 +49,22 @@ for epoch in range(epochs):
         for index, (context_tensor, target) in enumerate(t):
             model.zero_grad()
             context_tensor = context_tensor.to(device)  # 这行代码气死我了
-            # print(context_tensor.is_cuda)
             log_probs = model(context_tensor)
             target_tensor = torch.tensor([target], dtype=torch.long)
             target_tensor = target_tensor.to(device)
-            # print(target_tensor)
             loss = loss_function(log_probs, target_tensor)
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
             t.set_postfix(loss=total_loss)
 
-# To get the embedding of a particular word, e.g. "beauty"
-# print(model.embeddings.weight[word2int["beauty"]])
-file_object = open('./result/result_vector.txt', 'w')
-int2word = test.get_int2word()
-for item in vocab:
-    file_object.write(int2word[int(item)])
-    file_object.write(' ')
-    # TypeError: can't convert cuda:0 device type tensor to numpy.
-    # Use Tensor.cpu() to copy the tensor to host memory first.
-    file_object.write(str(model.embeddings.weight[int(item)].cpu().detach().numpy().tolist()))
-    file_object.write('\n')
-file_object.close()
+with open('./result/result_vector.txt', 'w') as file_object:
+    int2word = pre_process.get_int2word()
+    for item in vocab:
+        file_object.write(int2word[int(item)])
+        file_object.write(' ')
+        # TypeError: can't convert cuda:0 device type tensor to numpy.
+        # Use Tensor.cpu() to copy the tensor to host memory first.
+        file_object.write(str(model.embeddings.weight[int(item)].cpu().detach().numpy().tolist()))
+        file_object.write('\n')
 torch.save(model, './result/result_model.model')

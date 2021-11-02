@@ -7,10 +7,3 @@
 #     res = en_wiki_word2vec_model.wv.most_similar(test_words[i])
 #     print(test_words[i])
 #     print(res)
-
-
-# from my_data_set import MyDataSet
-# test = MyDataSet('en')
-# print(len(test))
-for i in range(3):
-    print(i)

@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optimizer
 
 import pre_process
+import pre_process_zh
 from my_data_set import MyDataSet
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -14,8 +15,12 @@ EMBEDDING_DIM = 50  # 词向量维度
 per_batch_size = 50
 epochs = 20
 
+flag = 'zh'
+en_vector_path = './result/result_vector.txt'
+zh_vector_path = './result/result_vector_zh.txt'
+
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-train_dataset = MyDataSet('en')
+train_dataset = MyDataSet(flag)
 vocab_len, vocab = train_dataset.get_vocab()
 # train_loader = DataLoader(dataset=train_dataset, batch_size=per_batch_size)
 
@@ -32,11 +37,11 @@ class DNNLMNGram(nn.Module):
         embeds = self.embeddings(inputs).view((1, -1))
         out = F.relu(self.linear1(embeds))
         out = self.linear2(out)
-        result_prob = F.softmax(out, dim=1)
-        return result_prob
+        probability = F.log_softmax(out, dim=1)
+        return probability
 
 
-loss_function = nn.CrossEntropyLoss()
+loss_function = nn.NLLLoss()
 model = DNNLMNGram(vocab_len, EMBEDDING_DIM, CONTEXT_SIZE)
 model.to(device)
 optimizer = optimizer.Adam(model.parameters(), lr=0.001)
@@ -59,8 +64,8 @@ for epoch in range(epochs):
             total_loss += loss.detach().item()
             t.set_postfix(loss=total_loss)
 
-with open('./result/result_vector.txt', 'w') as file_object:
-    int2word = pre_process.get_int2word()
+with open(en_vector_path if flag == 'en' else zh_vector_path, 'w') as file_object:
+    int2word = pre_process.get_int2word() if flag == 'en' else pre_process_zh.get_int2word()
     for item in vocab:
         file_object.write(int2word[int(item)])
         file_object.write(' ')

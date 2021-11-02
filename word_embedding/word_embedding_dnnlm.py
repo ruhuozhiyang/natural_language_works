@@ -56,7 +56,7 @@ for epoch in range(epochs):
             model.zero_grad()
             context_tensor = context_tensor.to(device)  # 这行代码气死我了
             result_prob = model(context_tensor)
-            target_tensor = torch.tensor([target], dtype=torch.long)
+            target_tensor = torch.tensor([target])
             target_tensor = target_tensor.to(device)
             loss = loss_function(result_prob, target_tensor)
             loss.backward()

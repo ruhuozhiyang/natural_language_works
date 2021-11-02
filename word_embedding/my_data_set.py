@@ -24,7 +24,7 @@ class MyDataSet(Dataset):
         else:
             context = [self.test_sentence[index - j - 1] for j in range(CONTEXT_SIZE)]
             target = self.test_sentence[index]
-        context = torch.tensor(np.array(context), dtype=torch.long)
+        context = torch.tensor(np.array(context))
         return context, target
 
     def __len__(self):
@@ -39,6 +39,7 @@ class MyDataSet(Dataset):
             for word in line.split():
                 self.test_sentence.append(int(word))
             self.test_sentence.append(-1)
+        print(len(self.test_sentence))
         self.vocab = en.get_vocab_list() if load_flag == 'en' else zh.get_vocab_list()
 
     def get_vocab(self):

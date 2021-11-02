@@ -39,3 +39,7 @@ write_to_txt(sentences)
 
 def get_int2word():
     return int2word
+
+
+def get_vocab_list():
+    return vocab_list

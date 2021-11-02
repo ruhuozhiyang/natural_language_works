@@ -20,10 +20,10 @@ vocab_len, vocab = train_dataset.get_vocab()
 # train_loader = DataLoader(dataset=train_dataset, batch_size=per_batch_size)
 
 
-class NGramLanguageModeler(nn.Module):
+class DNNLMNGram(nn.Module):
 
     def __init__(self, vocab_size, embedding_dim, context_size):
-        super(NGramLanguageModeler, self).__init__()
+        super(DNNLMNGram, self).__init__()
         self.embeddings = nn.Embedding(vocab_size, embedding_dim)
         self.linear1 = nn.Linear(context_size * embedding_dim, 128)
         self.linear2 = nn.Linear(128, vocab_size)
@@ -32,12 +32,12 @@ class NGramLanguageModeler(nn.Module):
         embeds = self.embeddings(inputs).view((1, -1))
         out = F.relu(self.linear1(embeds))
         out = self.linear2(out)
-        log_probs = F.log_softmax(out, dim=1)
-        return log_probs
+        result_prob = F.softmax(out, dim=1)
+        return result_prob
 
 
-loss_function = nn.NLLLoss()
-model = NGramLanguageModeler(vocab_len, EMBEDDING_DIM, CONTEXT_SIZE)
+loss_function = nn.CrossEntropyLoss()
+model = DNNLMNGram(vocab_len, EMBEDDING_DIM, CONTEXT_SIZE)
 model.to(device)
 optimizer = optimizer.Adam(model.parameters(), lr=0.001)
 
@@ -50,13 +50,13 @@ for epoch in range(epochs):
         for index, (context_tensor, target) in enumerate(t):
             model.zero_grad()
             context_tensor = context_tensor.to(device)  # 这行代码气死我了
-            log_probs = model(context_tensor)
+            result_prob = model(context_tensor)
             target_tensor = torch.tensor([target], dtype=torch.long)
             target_tensor = target_tensor.to(device)
-            loss = loss_function(log_probs, target_tensor)
+            loss = loss_function(result_prob, target_tensor)
             loss.backward()
             optimizer.step()
-            total_loss += loss.item()
+            total_loss += loss.detach().item()
             t.set_postfix(loss=total_loss)
 
 with open('./result/result_vector.txt', 'w') as file_object:

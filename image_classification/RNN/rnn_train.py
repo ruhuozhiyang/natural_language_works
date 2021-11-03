@@ -70,7 +70,7 @@ class ImageRnn(nn.Module):
 
         # 前向传播，rnn_out是128个序列的输出值。
         rnn_out, _ = self.basic_rnn.forward(data)
-        # 取RNN的最后一个序列，然后求出每一类概率.rnn_out的size为[75, 150] out为75*2
+        # 取RNN的最后一个序列，然后求出每一类概率.
         out = self.FC(rnn_out[-1, :, :])
         return out.view(-1, self.out_dim)
 
@@ -108,6 +108,7 @@ for epoch in range(epochs):
     for index, (input_data, labels) in enumerate(train_loader):
         optimizer.zero_grad()
 
+        # print(input_data.size())  # torch.Size([30, 3, 128, 128])
         input_data = input_data.view(input_data.size(0), 128, -1).to(device)
         labels = labels.to(device)
         outputs = model.forward(input_data)

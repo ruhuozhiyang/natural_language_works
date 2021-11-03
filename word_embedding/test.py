@@ -7,3 +7,6 @@
 #     res = en_wiki_word2vec_model.wv.most_similar(test_words[i])
 #     print(test_words[i])
 #     print(res)
+
+with open('./data/test.txt', 'w') as f:
+    f.write('普通')

@@ -41,5 +41,9 @@ def get_int2word():
     return int2word
 
 
+def get_word2int():
+    return word2int
+
+
 def get_vocab_list():
     return vocab_list

@@ -8,5 +8,3 @@
 #     print(test_words[i])
 #     print(res)
 
-with open('./data/test.txt', 'w') as f:
-    f.write('普通')

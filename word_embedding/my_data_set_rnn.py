@@ -1,7 +1,7 @@
 # Pytorch用torch.utils.data.Dataset构建数据集，想要构建自己的数据集，则需继承Dataset类.
 import numpy as np
 import torch
-import pre_process as en
+import pre_process_en as en
 import pre_process_zh as zh
 from torch.utils.data import Dataset
 

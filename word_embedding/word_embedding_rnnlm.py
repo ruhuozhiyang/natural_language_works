@@ -1,11 +1,9 @@
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as f
 import torch.optim as optimizer
-from torch.utils.data import DataLoader
 
-import pre_process
+import pre_process_en
 import pre_process_zh
 from my_data_set_rnn import MyDataSetRnn
 from tqdm import tqdm
@@ -15,19 +13,19 @@ CONTEXT_SIZE = 1  # 上下文词个数
 EMBEDDING_DIM = 50  # 词向量维度
 rnn_layers = 3
 rnn_neurons = 128
-per_batch_size = 50
+# per_batch_size = 50
 epochs = 20
 
 flag = 'zh'
-en_vector_path = './result/result_vector.txt'
-zh_vector_path = './result/result_vector_zh.txt'
+en_vector_path = './result/rnn/result_vector.txt'
+zh_vector_path = './result/rnn/result_vector_zh.txt'
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 train_dataset = MyDataSetRnn(flag, CONTEXT_SIZE)
 vocab_len, vocab = train_dataset.get_vocab()
 # RNN是带有时序信息的。DNN全连接层Dense的输入维度是不能变化的。
 # RNN得输入的是一个序列.图片就按列/行，看成长度为图像边长像素的序列。文本也得输入一段文字，才能看成序列。
-train_loader = DataLoader(dataset=train_dataset, batch_size=per_batch_size)
+# train_loader = DataLoader(dataset=train_dataset, batch_size=per_batch_size)
 
 
 class RNNLM2Gram(nn.Module):
@@ -57,6 +55,8 @@ for epoch in range(epochs):
     total_loss = 0
     model.train()
 
+    train_dataset = MyDataSetRnn(flag, CONTEXT_SIZE)
+
     with tqdm(train_dataset) as t:
         t.set_description('Epoch {}/{}:'.format(epoch + 1, epochs))
         for index, (context_tensor, target_tensor) in enumerate(t):
@@ -72,12 +72,12 @@ for epoch in range(epochs):
             t.set_postfix(loss=total_loss)
 
 with open(en_vector_path if flag == 'en' else zh_vector_path, 'w') as file_object:
-    word2int = pre_process.get_word2int() if flag == 'en' else pre_process_zh.get_word2int()
+    word2int = pre_process_en.get_word2int() if flag == 'en' else pre_process_zh.get_word2int()
     for item in vocab:
         file_object.write(item)
         file_object.write(' ')
         # TypeError: can't convert cuda:0 device type tensor to numpy.
         # Use Tensor.cpu() to copy the tensor to host memory first.
-        file_object.write(str(model.embeddings.weight[word2int(item)].cpu().detach().numpy().tolist()))
+        file_object.write(str(model.embeddings.weight[word2int[item]].cpu().detach().numpy().tolist()))
         file_object.write('\n')
-torch.save(model, './result/result_model.model')
+torch.save(model, './result/rnn/result_model.model')

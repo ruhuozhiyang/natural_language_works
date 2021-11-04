@@ -3,21 +3,21 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optimizer
 
-import pre_process
+import pre_process_en
 import pre_process_zh
 from my_data_set import MyDataSet
-from torch.utils.data import DataLoader
+# from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 # 超参数
 CONTEXT_SIZE = 3  # 上下文词个数
 EMBEDDING_DIM = 50  # 词向量维度
-per_batch_size = 50
+# per_batch_size = 50
 epochs = 20
 
 flag = 'zh'
-en_vector_path = './result/result_vector.txt'
-zh_vector_path = './result/result_vector_zh.txt'
+en_vector_path = './result/dnn/result_vector.txt'
+zh_vector_path = './result/dnn/result_vector_zh.txt'
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 train_dataset = MyDataSet(flag, CONTEXT_SIZE)
@@ -65,7 +65,7 @@ for epoch in range(epochs):
             t.set_postfix(loss=total_loss)
 
 with open(en_vector_path if flag == 'en' else zh_vector_path, 'w') as file_object:
-    word2int = pre_process.get_word2int() if flag == 'en' else pre_process_zh.get_word2int()
+    word2int = pre_process_en.get_word2int() if flag == 'en' else pre_process_zh.get_word2int()
     for item in vocab:
         file_object.write(item)
         file_object.write(' ')
@@ -73,4 +73,4 @@ with open(en_vector_path if flag == 'en' else zh_vector_path, 'w') as file_objec
         # Use Tensor.cpu() to copy the tensor to host memory first.
         file_object.write(str(model.embeddings.weight[word2int(item)].cpu().detach().numpy().tolist()))
         file_object.write('\n')
-torch.save(model, './result/result_model.model')
+torch.save(model, './result/dnn/result_model.model')

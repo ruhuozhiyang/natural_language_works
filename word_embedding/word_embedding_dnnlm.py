@@ -58,6 +58,8 @@ for epoch in range(epochs):
             result_prob = model(context_tensor)
             target_tensor = torch.tensor([target])
             target_tensor = target_tensor.to(device)
+            print(result_prob)
+            print(target_tensor)
             loss = loss_function(result_prob, target_tensor)
             loss.backward()
             optimizer.step()

@@ -1,3 +1,5 @@
+from torch.utils.data import DataLoader
+
 import pre_process_zh
 import pre_process_en
 import torch.nn.functional as F
@@ -35,10 +37,9 @@ class LossFunction(nn.Module):
     def __init__(self):
         super(LossFunction, self).__init__()
 
-    @staticmethod
-    def forward(inputs):
-        result = max(0, 1 - inputs[0] + inputs[1])
-        return result
+    def forward(self, inputs):
+        _loss = max(0, 1 - inputs[0] + inputs[1])
+        return _loss
 
 
 train_data = MyDataSetCw(flag, CONTEXT_SIZE)
@@ -53,11 +54,13 @@ for epoch in range(epochs):
     model.train()
 
     train_data = MyDataSetCw(flag, CONTEXT_SIZE)
-
+    # train_loader = DataLoader(dataset=train_data, batch_size=2)
     with tqdm(train_data) as t:
         t.set_description('Epoch {}/{}:'.format(epoch + 1, epochs))
         for index, (correct_sample, wrong_samples) in enumerate(t):
             model.zero_grad()
+            # print(correct_sample)
+            # print(wrong_samples)
             correct_score = model(correct_sample)
             for wrong_sample in wrong_samples:
                 wrong_score = model(wrong_sample)

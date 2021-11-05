@@ -1,8 +1,6 @@
-from torch.utils.data import DataLoader
-
 import pre_process_zh
 import pre_process_en
-import torch.nn.functional as F
+import torch.nn.functional as f
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -28,7 +26,7 @@ class CWModel(nn.Module):
 
     def forward(self, inputs):
         embeds = self.embeddings(inputs).view((1, -1))
-        out = F.relu(self.linear1(embeds))
+        out = f.relu(self.linear1(embeds))
         out = self.linear2(out)
         return out
 
@@ -54,12 +52,10 @@ for epoch in range(epochs):
     model.train()
 
     train_data = MyDataSetCw(flag, CONTEXT_SIZE)
-    # train_loader = DataLoader(dataset=train_data, batch_size=2)
+
     with tqdm(train_data) as t:
-        temp = ''
         t.set_description('Epoch {}/{}:'.format(epoch + 1, epochs))
         for index, (correct_sample, wrong_samples) in enumerate(t):
-            temp = correct_sample
             model.zero_grad()
             correct_score = model(correct_sample)
             for wrong_sample in wrong_samples:
@@ -69,7 +65,6 @@ for epoch in range(epochs):
                 optimizer.step()
                 total_loss += loss.detach().item()
                 t.set_postfix(loss=total_loss)
-        print(temp)
 
 with open(en_vector_path if flag == 'en' else zh_vector_path, 'w') as file_object:
     word2int = pre_process_en.get_word2int() if flag == 'en' else pre_process_zh.get_word2int()

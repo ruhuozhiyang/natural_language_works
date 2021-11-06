@@ -10,9 +10,11 @@ en_vector_path = './result/cw/result_vector.txt'
 zh_vector_path = './result/cw/result_vector_zh.txt'
 
 epochs = 20
-CONTEXT_SIZE = 3
+CONTEXT_SIZE = 2
 EMBEDDING_DIM = 50
-learning_rate = 0.001
+learning_rate = 0.0001
+linear_neurons = 128
+
 flag = 'en'
 
 
@@ -21,8 +23,8 @@ class CWModel(nn.Module):
     def __init__(self, embedding_dim, vocab_size):
         super(CWModel, self).__init__()
         self.embeddings = nn.Embedding(vocab_size, embedding_dim)
-        self.linear1 = nn.Linear(7*embedding_dim, 128)
-        self.linear2 = nn.Linear(128, 1)
+        self.linear1 = nn.Linear(5*embedding_dim, linear_neurons)
+        self.linear2 = nn.Linear(linear_neurons, 1)
 
     def forward(self, inputs):
         embeds = self.embeddings(inputs).view((1, -1))
@@ -35,7 +37,8 @@ class LossFunction(nn.Module):
     def __init__(self):
         super(LossFunction, self).__init__()
 
-    def forward(self, inputs):
+    @staticmethod
+    def forward(inputs):
         _loss = max(0, 1 - inputs[0] + inputs[1])
         return _loss
 

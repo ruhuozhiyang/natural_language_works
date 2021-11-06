@@ -18,7 +18,7 @@ class MyDataSetCw(Dataset):
         index = self.step
         wrong_list = []
         if self.test_sentence[index + self.context_size] == -1:
-            self.step = index + 2*self.context_size + 1
+            self.step = index + 2 * self.context_size + 1
         index = self.step
         correct_list = [self.test_sentence[j] for j in range(index - self.context_size, index + self.context_size + 1)]
         # for item in self.vocab:

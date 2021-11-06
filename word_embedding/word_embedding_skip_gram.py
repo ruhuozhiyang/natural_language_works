@@ -9,7 +9,7 @@ from my_data_set_skipgram import MyDataSetSkipGram
 from tqdm import tqdm
 
 # 超参数
-CONTEXT_SIZE = 3  # 上下文词个数
+CONTEXT_SIZE = 2  # 上下文词个数
 EMBEDDING_DIM = 50  # 词向量维度
 epochs = 20
 

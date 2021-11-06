@@ -11,12 +11,12 @@ from tqdm import tqdm
 # 超参数
 CONTEXT_SIZE = 1  # 上下文词个数
 EMBEDDING_DIM = 50  # 词向量维度
+learning_rate = 0.001
 rnn_layers = 3
 rnn_neurons = 128
-# per_batch_size = 50
 epochs = 20
 
-flag = 'en'
+flag = 'zh'
 en_vector_path = './result/rnn/result_vector.txt'
 zh_vector_path = './result/rnn/result_vector_zh.txt'
 
@@ -33,7 +33,7 @@ class RNNLM2Gram(nn.Module):
     def __init__(self, vocab_size, embedding_dim, context_size):
         super(RNNLM2Gram, self).__init__()
         self.embeddings = nn.Embedding(vocab_size, embedding_dim)
-        self.basic_rnn = nn.LSTM(context_size * embedding_dim, rnn_neurons, rnn_layers)
+        self.basic_rnn = nn.LSTM(embedding_dim, rnn_neurons, rnn_layers)
         self.FC = nn.Linear(rnn_neurons, vocab_size)
 
     def forward(self, inputs):
@@ -49,7 +49,7 @@ class RNNLM2Gram(nn.Module):
 loss_function = nn.NLLLoss()
 model = RNNLM2Gram(vocab_len, EMBEDDING_DIM, CONTEXT_SIZE)
 model.to(device)
-optimizer = optimizer.Adam(model.parameters(), lr=0.001)
+optimizer = optimizer.Adam(model.parameters(), lr=learning_rate)
 
 for epoch in range(epochs):
     total_loss = 0

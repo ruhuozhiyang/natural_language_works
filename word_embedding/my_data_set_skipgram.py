@@ -34,16 +34,17 @@ class MyDataSetSkipGram(Dataset):
         return current_word, target_word
 
     def __len__(self):
-        return
-        # return self.iter_num
+        return self.iter_num
 
     def __init__(self, load_flag, context_size):
+        self.iter_num = 0
         self.context_size = context_size
         self.step = self.context_size
         self.test_sentence = []
         f = open(en_data_dir if load_flag == 'en' else zh_data_dir)
         lines = f.readlines()
         for line in lines:
+            self.iter_num += len(line) - 2*context_size
             for word in line.split():
                 self.test_sentence.append(int(word))
             self.test_sentence.append(-1)

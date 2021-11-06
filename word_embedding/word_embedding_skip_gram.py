@@ -24,21 +24,20 @@ vocab_len, vocab = train_dataset.get_vocab()
 
 class SkipGramModel(nn.Module):
 
-    def __init__(self, vocab_size, embedding_dim, context_size):
+    def __init__(self, vocab_size, embedding_dim):
         super(SkipGramModel, self).__init__()
         self.embeddings = nn.Embedding(vocab_size, embedding_dim)
         self.linear = nn.Linear(50, vocab_size)
 
     def forward(self, inputs):
         embeds = self.embeddings(inputs)
-        out = torch.mean(embeds, dim=0)
-        out = self.linear(out).view(1, -1)
+        out = self.linear(embeds).view(1, -1)
         probability = log_softmax(input=out, dim=1)
         return probability
 
 
 loss_function = nn.NLLLoss()
-model = SkipGramModel(vocab_len, EMBEDDING_DIM, CONTEXT_SIZE)
+model = SkipGramModel(vocab_len, EMBEDDING_DIM)
 model.to(device)
 optimizer = optimizer.Adam(model.parameters(), lr=0.0001)
 
@@ -51,12 +50,10 @@ for epoch in range(epochs):
     with tqdm(train_dataset) as t:
         t.set_description('Epoch {}/{}:'.format(epoch + 1, epochs))
         for index, (current_tensor, target_tensor) in enumerate(t):
-            print(current_tensor)
-            print(target_tensor)
             model.zero_grad()
-            context_tensor = context_tensor.to(device)
+            current_tensor = current_tensor.to(device)
             target_tensor = target_tensor.to(device)
-            result_prob = model(context_tensor)
+            result_prob = model(current_tensor)
             loss = loss_function(result_prob, target_tensor)
             loss.backward()
             optimizer.step()

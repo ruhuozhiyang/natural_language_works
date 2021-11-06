@@ -57,8 +57,8 @@ for epoch in range(epochs):
             loss = loss_function(result_prob, target_tensor)
             loss.backward()
             optimizer.step()
-            # total_loss += loss.detach().item()
-            t.set_postfix(loss=loss)
+            total_loss += loss.detach().item()
+            t.set_postfix(loss=total_loss)
 
 with open(en_vector_path if flag == 'en' else zh_vector_path, 'w') as file_object:
     word2int = pre_process_en.get_word2int() if flag == 'en' else pre_process_zh.get_word2int()

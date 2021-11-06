@@ -16,7 +16,7 @@ rnn_neurons = 128
 # per_batch_size = 50
 epochs = 20
 
-flag = 'zh'
+flag = 'en'
 en_vector_path = './result/rnn/result_vector.txt'
 zh_vector_path = './result/rnn/result_vector_zh.txt'
 

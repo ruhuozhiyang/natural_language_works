@@ -15,20 +15,18 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 
 class MyDataSet(Dataset):
     def __getitem__(self, index):
-        index = index + self.step
+        index = self.step
         if self.test_sentence[index] == -1:
-            context = [self.test_sentence[index + self.context_size - j]
-                       for j in range(self.context_size)]
-            target = self.test_sentence[index + 1 + self.context_size]
-            self.step = self.step + self.context_size + 1
-        else:
-            context = [self.test_sentence[index - j - 1] for j in range(self.context_size)]
-            target = self.test_sentence[index]
+            index = index + self.context_size + 1
+        context = [self.test_sentence[index - j - 1] for j in range(self.context_size)]
+        target = self.test_sentence[index]
+        self.step += 1
         context = torch.tensor(np.array(context))
         return context, target
 
     def __len__(self):
-        return len(self.test_sentence)
+        # return len(self.test_sentence)
+        return
 
     def __init__(self, load_flag, context_size):
         self.context_size = context_size

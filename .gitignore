@@ -133,3 +133,5 @@ image_classification/CNN/result/
 
 word_embedding/result/
 word_embedding/data/
+
+sequence_tagging/data

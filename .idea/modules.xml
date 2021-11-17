@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/image_classification/image_classification.iml" filepath="$PROJECT_DIR$/image_classification/image_classification.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/natural_language_works.iml" filepath="$PROJECT_DIR$/.idea/natural_language_works.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sequence_tagging/sequence_tagging.iml" filepath="$PROJECT_DIR$/sequence_tagging/sequence_tagging.iml" />
       <module fileurl="file://$PROJECT_DIR$/word_embedding/word_embedding.iml" filepath="$PROJECT_DIR$/word_embedding/word_embedding.iml" />
     </modules>
   </component>

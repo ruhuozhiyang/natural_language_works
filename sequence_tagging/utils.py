@@ -21,7 +21,7 @@ def build_vocab(data_dir):
     :return: the word dict for training
     """
 
-    if (os.path.isfile('word_dict.npy')):
+    if os.path.isfile('word_dict.npy'):
         word_dict = np.load('word_dict.npy', allow_pickle=True).item()
         return word_dict
     else:
@@ -31,7 +31,7 @@ def build_vocab(data_dir):
         for line in lines:
             word_list = line.split()
             for word in word_list:
-                if (word not in word_dict):
+                if word not in word_dict:
                     word_dict[word] = 1
                 else:
                     word_dict[word] += 1

@@ -37,6 +37,9 @@ class NERdataset(Dataset):
                 self.label[-1] = self.label[-1][:max_length]
                 self.length[-1] = max_length
             else:
+                """
+                padding处理.便于batch.
+                """
                 while len(self.corpus[-1]) < max_length:
                     self.corpus[-1].append(word2id['pad'])
                     self.label[-1].append(tag2id['PAD'])
@@ -97,12 +100,12 @@ def train(config, model, dataloader, optimizer):
         for index, data in enumerate(dataloader):
             optimizer.zero_grad()
             corpus, label, length = data
-            corpus, label, length = corpus.cuda(), label.cuda(), length.cuda()
+            # corpus, label, length = corpus.cuda(), label.cuda(), length.cuda()
             output = model(corpus)
             loss = loss_function(output.view(-1, output.size(-1)), label.view(-1))
             loss.backward()
             optimizer.step()
-            if index % 200 == 0:
+            if index % 100 == 0:
                 print('epoch: ', epoch, ' step:%04d,------------loss:%f' % (index, loss.item()))
 
         prec, rec, f1 = val(config, model)
@@ -118,7 +121,7 @@ if __name__ == '__main__':
     trainset = NERdataset(config.data_dir, 'train', word2id, tag2id, max_length)
     dataloader = DataLoader(trainset, batch_size=config.batch_size)
     nerlstm = NERLSTM(config.embedding_dim, config.hidden_dim, config.dropout, word2id,
-                      tag2id).cuda()
+                      tag2id)
     optimizer = Adam(nerlstm.parameters(), config.learning_rate)
 
     train(config, nerlstm, dataloader, optimizer)

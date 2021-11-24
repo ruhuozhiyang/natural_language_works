@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from sklearn.metrics import precision_score, recall_score, f1_score, classification_report
 from utils import build_vocab, build_dict, cal_max_length, Config
-from model import NERLSTM
+from model import NER_CRF_LSTM
 from torch.optim import Adam, SGD
 import os
 
@@ -77,11 +77,11 @@ def val(config, model):
                     tmp.append(j.item())
             leng.append(tmp)
 
-        for index, i in enumerate(predict.tolist()):
-            preds.extend(i[:len(leng[index])])
+        for ind, i in enumerate(predict.tolist()):
+            preds.extend(i[:len(leng[ind])])
 
-        for index, i in enumerate(label.tolist()):
-            labels.extend(i[:len(leng[index])])
+        for ind, i in enumerate(label.tolist()):
+            labels.extend(i[:len(leng[ind])])
 
     precision = precision_score(labels, preds, average='macro')
     recall = recall_score(labels, preds, average='macro')
@@ -101,8 +101,9 @@ def train(config, model, dataloader, optimizer):
             optimizer.zero_grad()
             corpus, label, length = data
             # corpus, label, length = corpus.cuda(), label.cuda(), length.cuda()
-            output = model(corpus)
-            loss = loss_function(output.view(-1, output.size(-1)), label.view(-1))
+            # output = model(corpus)
+            # loss = loss_function(output.view(-1, output.size(-1)), label.view(-1))
+            loss = model.neg_log_likelihood(corpus, label)
             loss.backward()
             optimizer.step()
             if index % 100 == 0:
@@ -120,8 +121,8 @@ if __name__ == '__main__':
     max_length = cal_max_length(config.data_dir)
     trainset = NERdataset(config.data_dir, 'train', word2id, tag2id, max_length)
     dataloader = DataLoader(trainset, batch_size=config.batch_size)
-    nerlstm = NERLSTM(config.embedding_dim, config.hidden_dim, config.dropout, word2id,
+    nerlstm = NER_CRF_LSTM(config.embedding_dim, config.hidden_dim, config.dropout, word2id,
                       tag2id)
     optimizer = Adam(nerlstm.parameters(), config.learning_rate)
 
-    train(config, nerlstm, dataloader, optimizer)
+    train(config, nerlstm, trainset, optimizer)

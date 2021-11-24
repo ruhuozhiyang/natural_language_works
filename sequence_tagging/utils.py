@@ -49,7 +49,7 @@ def build_dict(word_dict):
 
     # 7 is the label of pad
     tag2id = {'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-ORG': 3, 'I-ORG': 4, 'B-LOC': 5, 'I-LOC': 6,
-              'PAD': 7}
+              'PAD': 7, '<START>': 8, '<STOP>': 9}
     word2id = {}
     for key in word_dict:
         word2id[key] = len(word2id)

@@ -2,7 +2,6 @@ import os
 import numpy as np
 
 
-# config for training
 class Config:
     def __init__(self):
         self.learning_rate = 1e-4
@@ -11,7 +10,7 @@ class Config:
         self.data_dir = 'data/'
         self.embedding_dim = 300
         self.hidden_dim = 512
-        self.save_model = 'NERmodel.pth'
+        self.save_model = 'NER_Model.pth'
         self.batch_size = 32
 
 
@@ -20,7 +19,6 @@ def build_vocab(data_dir):
     :param data_dir: the dir of train_corpus.txt
     :return: the word dict for training
     """
-
     if os.path.isfile('word_dict.npy'):
         word_dict = np.load('word_dict.npy', allow_pickle=True).item()
         return word_dict
@@ -46,8 +44,6 @@ def build_dict(word_dict):
     :param word_dict:
     :return: word2id and tag2id
     """
-
-    # 7 is the label of pad
     tag2id = {'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-ORG': 3, 'I-ORG': 4, 'B-LOC': 5, 'I-LOC': 6,
               'PAD': 7, '<START>': 8, '<STOP>': 9}
     word2id = {}
@@ -65,5 +61,4 @@ def cal_max_length(data_dir):
     for line in lines:
         if len(line.split()) > max_len:
             max_len = len(line.split())
-
     return max_len

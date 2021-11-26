@@ -1,19 +1,15 @@
-# pytorch code for sequence tagging
-
-# 此版本为简单的NER代码，没有使用CRF和训练好的词向量，仅做参考使用。
-
 import torch
 from torch.utils.data import DataLoader, Dataset
 from sklearn.metrics import precision_score, recall_score, f1_score, classification_report
 from utils import build_vocab, build_dict, cal_max_length, Config
 from model import NER_CRF_LSTM
-from torch.optim import Adam, SGD
+from torch.optim import Adam
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 
-class NERdataset(Dataset):
+class NER_Dataset(Dataset):
 
     def __init__(self, data_dir, split, word2id, tag2id, max_length):
         file_dir = data_dir + split
@@ -55,14 +51,14 @@ class NERdataset(Dataset):
         return len(self.label)
 
 
-def val(config, model):
+def val(val_config, model):
     # ignore the pad label
     model.eval()
     loss_function = torch.nn.CrossEntropyLoss(ignore_index=7)
-    testset = NERdataset(config.data_dir, 'test', word2id, tag2id, max_length)
-    dataloader = DataLoader(testset, batch_size=config.batch_size)
+    test_set = NER_Dataset(val_config.data_dir, 'test', word2id, tag2id, max_length)
+    val_data_loader = DataLoader(test_set, batch_size=val_config.batch_size)
     preds, labels = [], []
-    for index, data in enumerate(dataloader):
+    for index, data in enumerate(val_data_loader):
         optimizer.zero_grad()
         corpus, label, length = data
         corpus, label, length = corpus.cuda(), label.cuda(), length.cuda()
@@ -92,26 +88,26 @@ def val(config, model):
     return precision, recall, f1
 
 
-def train(config, model, dataloader, optimizer):
+def train(train_config, model, train_data_loader, train_optimizer):
     # ignore the pad label
     loss_function = torch.nn.CrossEntropyLoss(ignore_index=7)
     best_f1 = 0.0
-    for epoch in range(config.epoch):
-        for index, data in enumerate(dataloader):
-            optimizer.zero_grad()
+    for epoch in range(train_config.epoch):
+        for index, data in enumerate(train_data_loader):
+            train_optimizer.zero_grad()
             corpus, label, length = data
             # corpus, label, length = corpus.cuda(), label.cuda(), length.cuda()
             # output = model(corpus)
             # loss = loss_function(output.view(-1, output.size(-1)), label.view(-1))
             loss = model.neg_log_likelihood(corpus, label)
             loss.backward()
-            optimizer.step()
+            train_optimizer.step()
             if index % 100 == 0:
                 print('epoch: ', epoch, ' step:%04d,------------loss:%f' % (index, loss.item()))
 
-        prec, rec, f1 = val(config, model)
+        pre, rec, f1 = val(train_config, model)
         if f1 > best_f1:
-            torch.save(model, config.save_model)
+            torch.save(model, train_config.save_model)
 
 
 if __name__ == '__main__':
@@ -119,10 +115,10 @@ if __name__ == '__main__':
     word_dict = build_vocab(config.data_dir)
     word2id, tag2id = build_dict(word_dict)
     max_length = cal_max_length(config.data_dir)
-    trainset = NERdataset(config.data_dir, 'train', word2id, tag2id, max_length)
-    dataloader = DataLoader(trainset, batch_size=config.batch_size)
-    nerlstm = NER_CRF_LSTM(config.embedding_dim, config.hidden_dim, config.dropout, word2id,
-                      tag2id)
-    optimizer = Adam(nerlstm.parameters(), config.learning_rate)
+    train_set = NER_Dataset(config.data_dir, 'train', word2id, tag2id, max_length)
+    data_loader = DataLoader(train_set, batch_size=config.batch_size)
+    ner_crf_lstm = NER_CRF_LSTM(config.embedding_dim, config.hidden_dim,
+                                config.dropout, word2id, tag2id)
+    optimizer = Adam(ner_crf_lstm.parameters(), config.learning_rate)
 
-    train(config, nerlstm, trainset, optimizer)
+    train(config, ner_crf_lstm, data_loader, optimizer)

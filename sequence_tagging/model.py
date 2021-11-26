@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as f
 
 START_TAG = "<START>"
 STOP_TAG = "<STOP>"
@@ -66,43 +65,26 @@ class NER_CRF_LSTM(nn.Module):
 
     def viterbi_decode(self, features):  # features是序列的特征表示.
         backpointers = []
-
-        # Initialize the viterbi variables in log space
         init_vvars = torch.full((1, self.tag_set_size), -10000.)
         init_vvars[0][self.tag_to_ix[START_TAG]] = 0
-
-        # forward_var at step i holds the viterbi variables for step i-1
         forward_var = init_vvars
         for feat in features:
-            bptrs_t = []  # holds the backpointers for this step
-            viterbivars_t = []  # holds the viterbi variables for this step
-
+            bptrs_t = []
+            viterbivars_t = []
             for next_tag in range(self.tag_set_size):
-                # next_tag_var[i] holds the viterbi variable for tag i at the
-                # previous step, plus the score of transitioning
-                # from tag i to next_tag.
-                # We don't include the emission scores here because the max
-                # does not depend on them (we add them in below)
                 next_tag_var = forward_var + self.transition[next_tag]
                 best_tag_id = argmax(next_tag_var)
                 bptrs_t.append(best_tag_id)
                 viterbivars_t.append(next_tag_var[0][best_tag_id].view(1))
-            # Now add in the emission scores, and assign forward_var to the set
-            # of viterbi variables we just computed
             forward_var = (torch.cat(viterbivars_t) + feat).view(1, -1)
             backpointers.append(bptrs_t)
-
-        # Transition to STOP_TAG
         terminal_var = forward_var + self.transition[self.tag_to_ix[STOP_TAG]]
         best_tag_id = argmax(terminal_var)
         path_score = terminal_var[0][best_tag_id]
-
-        # Follow the back pointers to decode the best path.
         best_path = [best_tag_id]
         for bptrs_t in reversed(backpointers):
             best_tag_id = bptrs_t[best_tag_id]
             best_path.append(best_tag_id)
-        # Pop off the start tag (we dont want to return that to the caller)
         start = best_path.pop()
         assert start == self.tag_to_ix[START_TAG]  # Sanity check
         best_path.reverse()
@@ -115,7 +97,6 @@ class NER_CRF_LSTM(nn.Module):
         return forward_score - gold_score
 
     def get_transition(self, dim):
-        # 随机初始化一个转移矩阵，transition[i][j]表示从label_i转移到label_j的概率
         temp = nn.Parameter(torch.randn(dim, dim))
         temp.data[self.tag_to_ix[START_TAG], :] = -10000
         temp.data[:, self.tag_to_ix[STOP_TAG]] = -10000
@@ -128,6 +109,5 @@ def log_sum_exp(status_matrix):
 
 
 def argmax(vec):
-    # return the argmax as a python int
     _, idx = torch.max(vec, 1)
     return idx.item()

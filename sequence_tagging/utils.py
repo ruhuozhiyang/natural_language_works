@@ -1,6 +1,8 @@
 import os
 import numpy as np
 
+word_dict_name = 'word_dict.npy'
+
 
 class Config:
     def __init__(self):
@@ -19,8 +21,8 @@ def build_vocab(data_dir):
     :param data_dir: the dir of train_corpus.txt
     :return: the word dict for training
     """
-    if os.path.isfile('word_dict.npy'):
-        word_dict = np.load('word_dict.npy', allow_pickle=True).item()
+    if os.path.isfile(word_dict_name):
+        word_dict = np.load(word_dict_name, allow_pickle=True).item()
         return word_dict
     else:
         word_dict = {}
@@ -34,8 +36,8 @@ def build_vocab(data_dir):
                 else:
                     word_dict[word] += 1
         word_dict = dict(sorted(word_dict.items(), key=lambda x: x[1], reverse=True))
-        np.save('word_dict.npy', word_dict)
-        word_dict = np.load('word_dict.npy', allow_pickle=True).item()
+        np.save(word_dict_name, word_dict)
+        word_dict = np.load(word_dict_name, allow_pickle=True).item()
         return word_dict
 
 

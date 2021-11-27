@@ -17,6 +17,7 @@ class NER_Dataset(Dataset):
         label_file = file_dir + '_label.txt'
         corpus = open(corpus_file).readlines()
         label = open(label_file).readlines()
+        self.pad_index = []
         self.corpus = []
         self.label = []
         self.length = []
@@ -32,10 +33,12 @@ class NER_Dataset(Dataset):
                 self.corpus[-1] = self.corpus[-1][:max_length]
                 self.label[-1] = self.label[-1][:max_length]
                 self.length[-1] = max_length
+                self.pad_index.append(max_length)
             else:
                 """
                 padding处理.便于batch.
                 """
+                self.pad_index.append(len(self.corpus[-1]))
                 while len(self.corpus[-1]) < max_length:
                     self.corpus[-1].append(word2id['pad'])
                     self.label[-1].append(tag2id['PAD'])
@@ -45,7 +48,7 @@ class NER_Dataset(Dataset):
         self.length = torch.Tensor(self.length).long()
 
     def __getitem__(self, item):
-        return self.corpus[item], self.label[item], self.length[item]
+        return self.corpus[item], self.label[item], self.length[item], self.pad_index[item]
 
     def __len__(self):
         return len(self.label)
@@ -54,55 +57,46 @@ class NER_Dataset(Dataset):
 def val(val_config, model):
     # ignore the pad label
     model.eval()
-    loss_function = torch.nn.CrossEntropyLoss(ignore_index=7)
     test_set = NER_Dataset(val_config.data_dir, 'test', word2id, tag2id, max_length)
     val_data_loader = DataLoader(test_set, batch_size=val_config.batch_size)
-    preds, labels = [], []
+    predictions, labels = [], []
     for index, data in enumerate(val_data_loader):
         optimizer.zero_grad()
-        corpus, label, length = data
-        corpus, label, length = corpus.cuda(), label.cuda(), length.cuda()
-        output = model(corpus)
-        predict = torch.argmax(output, dim=-1)
-        loss = loss_function(output.view(-1, output.size(-1)), label.view(-1))
-        leng = []
-        for i in label.cpu():
+        corpus, label, length, _ = data
+        scores, tag_seqs = model(corpus)
+        predict = tag_seqs
+        len_g = []
+        for i in label:
             tmp = []
             for j in i:
                 if j.item() < 7:
                     tmp.append(j.item())
-            leng.append(tmp)
+            len_g.append(tmp)
+        for ind, i in enumerate(predict):
+            predictions.extend(i[:len(len_g[ind])])
 
-        for ind, i in enumerate(predict.tolist()):
-            preds.extend(i[:len(leng[ind])])
+        for ind, i in enumerate(label):
+            labels.extend(i[:len(len_g[ind])])
 
-        for ind, i in enumerate(label.tolist()):
-            labels.extend(i[:len(leng[ind])])
-
-    precision = precision_score(labels, preds, average='macro')
-    recall = recall_score(labels, preds, average='macro')
-    f1 = f1_score(labels, preds, average='macro')
-    report = classification_report(labels, preds)
+    precision = precision_score(labels, predictions, average='macro')
+    recall = recall_score(labels, predictions, average='macro')
+    f1 = f1_score(labels, predictions, average='macro')
+    report = classification_report(labels, predictions)
     print(report)
     model.train()
     return precision, recall, f1
 
 
 def train(train_config, model, train_data_loader, train_optimizer):
-    # ignore the pad label
-    loss_function = torch.nn.CrossEntropyLoss(ignore_index=7)
     best_f1 = 0.0
     for epoch in range(train_config.epoch):
         for index, data in enumerate(train_data_loader):
             train_optimizer.zero_grad()
-            corpus, label, length = data
-            # corpus, label, length = corpus.cuda(), label.cuda(), length.cuda()
-            # output = model(corpus)
-            # loss = loss_function(output.view(-1, output.size(-1)), label.view(-1))
-            loss = model.neg_log_likelihood(corpus, label)
+            corpus, label, length, pad_index = data
+            loss = model.neg_log_likelihood(corpus, label, pad_index, ignore_index=7)
             loss.backward()
             train_optimizer.step()
-            if index % 100 == 0:
+            if index % 5 == 0:
                 print('epoch: ', epoch, ' step:%04d,------------loss:%f' % (index, loss.item()))
 
         pre, rec, f1 = val(train_config, model)

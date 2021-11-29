@@ -33,7 +33,6 @@ class NER_CRF_LSTM(nn.Module):
         self.lstm = nn.LSTM(self.embedding_dim, self.hidden_dim // 2, num_layers=1,
                             bidirectional=True, batch_first=True)
         self.hidden2tag = nn.Linear(self.hidden_dim, self.tag_set_size)
-        self.crf = CRF()
         self.transition = self.get_transition(self.tag_set_size)
         # self.bert = BertModel()
 

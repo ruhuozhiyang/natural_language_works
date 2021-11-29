@@ -1,10 +1,9 @@
-import numpy as np
 import torch
 import torch.nn as nn
 
 START_TAG = "<START>"
 STOP_TAG = "<STOP>"
-not_likelihood = -10
+not_likelihood = -10000.
 
 
 def log_sum_exp(vec):
@@ -34,9 +33,10 @@ class NER_CRF_LSTM(nn.Module):
         self.lstm = nn.LSTM(self.embedding_dim, self.hidden_dim // 2, num_layers=1,
                             bidirectional=True, batch_first=True)
         self.hidden2tag = nn.Linear(self.hidden_dim, self.tag_set_size)
+        self.crf = CRF()
         self.transition = self.get_transition(self.tag_set_size)
+        # self.bert = BertModel()
 
-    # 通过lstm获取序列特征
     def _get_lstm_features(self, batch_sentence):
         embeddings = self.word_embeds(batch_sentence)
         lstm_out, hidden = self.lstm(embeddings)
@@ -82,11 +82,6 @@ class NER_CRF_LSTM(nn.Module):
         result = torch.cat(batch_scores).view(1, -1)
         return torch.mean(result)
 
-    def forward(self, x):
-        lstm_feats = self._get_lstm_features(x)
-        scores, tag_seqs = self._viterbi_decode(lstm_feats)
-        return scores, tag_seqs
-
     def _viterbi_decode(self, batch_features):  # features是序列的特征表示.
         path_scores = []
         best_paths = []
@@ -130,3 +125,8 @@ class NER_CRF_LSTM(nn.Module):
         temp.data[self.tag_to_ix[START_TAG], :] = not_likelihood
         temp.data[:, self.tag_to_ix[STOP_TAG]] = not_likelihood
         return temp
+
+    def forward(self, x):
+        lstm_feats = self._get_lstm_features(x)
+        scores, tag_seqs = self._viterbi_decode(lstm_feats)
+        return scores, tag_seqs

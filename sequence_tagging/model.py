@@ -123,6 +123,9 @@ class NER_CRF_LSTM(nn.Module):
         temp = nn.Parameter(torch.randn(dim, dim))
         temp.data[self.tag_to_ix[START_TAG], :] = not_likelihood
         temp.data[:, self.tag_to_ix[STOP_TAG]] = not_likelihood
+        temp.data[:, 7] = not_likelihood  # pad不可能到任意标签
+        temp.data[7, :] = not_likelihood
+        temp.data[7, 7] = 0.0
         return temp
 
     def forward(self, x):

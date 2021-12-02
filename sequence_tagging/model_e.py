@@ -14,8 +14,6 @@ class NER_LSTM_CRF(nn.Module):
         self.tag_set_size = len(tag2id)
 
         self.char_emb = nn.Embedding.from_pretrained(emb_matrix, freeze=False, padding_idx=7)
-        # self.seg_emb = nn.Embedding(self.seg_size, config.seg_dim, padding_idx=7)
-        # self.emb_dim = config.char_dim + config.seg_dim
         self.emb_dim = config.char_dim
         self.dropout = nn.Dropout(config.dropout)
         self.lstm = nn.LSTM(self.emb_dim, self.hidden_dim // 2,
@@ -25,7 +23,6 @@ class NER_LSTM_CRF(nn.Module):
 
     def forward(self, char_ids, mask=None):
         embedding = self.char_emb(char_ids)
-        # embedding = torch.cat((self.char_emb(char_ids), self.seg_emb(seg_ids)), 2)
         outputs, hidden = self.lstm(embedding)
         outputs = self.dropout(outputs)
         outputs = self.hidden2tag(outputs)
@@ -33,7 +30,6 @@ class NER_LSTM_CRF(nn.Module):
 
     def log_likelihood(self, char_ids, tags_ids, mask=None):
         embedding = self.char_emb(char_ids)
-        # embedding = torch.cat((self.char_emb(char_ids), self.seg_emb(seg_ids)), 2)
         outputs, hidden = self.lstm(embedding)
         outputs = self.dropout(outputs)
         outputs = self.hidden2tag(outputs)

@@ -135,3 +135,6 @@ word_embedding/result/
 word_embedding/data/
 
 sequence_tagging/data
+
+machine_translator/data
+information_extraction/data

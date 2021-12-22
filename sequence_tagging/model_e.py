@@ -9,7 +9,6 @@ class NER_LSTM_CRF(nn.Module):
 
         self.hidden_dim = config.hidden_dim
         self.vocab_size = len(word2id)
-        self.seg_size = config.seg_size
         self.tag_to_ix = tag2id
         self.tag_set_size = len(tag2id)
 

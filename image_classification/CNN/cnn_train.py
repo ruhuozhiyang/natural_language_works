@@ -1,14 +1,12 @@
-import matplotlib
-import matplotlib.pyplot as plt
-from utils.cyclic_lr import CyclicLR
+import argparse
 from keras.utils.vis_utils import plot_model
-from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D
-from keras.layers import Dropout, Flatten, Dense, Activation
 from keras.preprocessing.image import ImageDataGenerator
-matplotlib.use('TkAgg')
+from image_classification.model import Image_CNN
+from image_classification.utils.cyclic_lr import CyclicLR
+from image_classification.utils.draw_img import DrawImg
 
-# 数据路径
+parser = argparse.ArgumentParser()
+parser.add_argument('--params_file', default='./params.json')
 train_data_dir = '../data/train'
 validation_data_dir = '../data/validation'
 test_data_dir = '../data/test'
@@ -18,30 +16,12 @@ result_dir = './result'
 img_width, img_height = 128, 128
 
 # 超参数配置 epochs/batch_size很关键的两个参数.
-epochs = 100
+epochs = 1
 batch_size = 25
 train_iteration_count = 200
 val_iteration_count = 20
 
-# 模型的具体内容
-model = Sequential()
-# 卷积层作为模型第一层时候，必须提供input_shape参数.
-model.add(Conv2D(16, (3, 3), padding="same", input_shape=(img_width, img_height, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-
-model.add(Conv2D(32, (3, 3), padding="same"))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-
-model.add(Conv2D(64, (3, 3), padding="same"))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-
-model.add(Flatten())  # 扁平层
-model.add(Dropout(0.25))
-model.add(Dense(1024, activation='relu'))  # 全连接
-model.add(Dense(2, activation='softmax'))
+model = Image_CNN().get_model_cnn()
 
 # compile用于配置训练模型: adam的默认学习率为0.001、loss配置损失函数、metrics为模型评估标准.
 model.compile(loss='categorical_crossentropy',
@@ -89,22 +69,7 @@ result = model.fit(
 score = model.evaluate(test_generator, steps=5)
 print('测试分数：' + str(score))
 
-# 绘图并将模型json/weight信息导出
-plt.plot(result.history['accuracy'])
-plt.plot(result.history['val_accuracy'])
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epochs')
-plt.legend(['train', 'val'], loc='upper left')
-plt.show()
-
-plt.plot(result.history['loss'])
-plt.plot(result.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epochs')
-plt.legend(['train', 'val'], loc='upper left')
-plt.show()
+DrawImg(result).draw_img()
 
 json_string = model.to_json()
 open(result_dir + '/model_architecture.json', 'w').write(json_string)

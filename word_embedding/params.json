@@ -1,0 +1,10 @@
+{
+  "epochs": 20,
+  "embedding_dim": 50,
+  "learning_rate": 1e-4,
+  "neurons": 128,
+  "context_size": 2,
+
+  "cw_result_en": "./result/cw/result_vector_en.txt",
+  "cw_result_zh": "./result/cw/result_vector_zh.txt"
+}

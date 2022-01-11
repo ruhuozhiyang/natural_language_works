@@ -70,12 +70,12 @@ clr = CyclicLR(base_lr=0.0005, max_lr=0.001, step_size=2000, mode='triangular')
 # epochs为训练模型迭代轮次.一个轮次是在整个 x 和 y 上的一轮迭代.
 # validation为用来评估当前模型损失，模型将不会在这个数据上进行训练.
 result = model.fit(
-    train_generator,
-    steps_per_epoch=train_iteration_count,
-    epochs=epochs,
-    validation_data=validation_generator,
-    validation_steps=val_iteration_count,
-    callbacks=clr)
+	train_generator,
+	steps_per_epoch=train_iteration_count,
+	epochs=epochs,
+	validation_data=validation_generator,
+	validation_steps=val_iteration_count,
+	callbacks=clr)
 
 # 测试模型、评估分数
 score = model.evaluate(test_generator, steps=test_iteration_count)

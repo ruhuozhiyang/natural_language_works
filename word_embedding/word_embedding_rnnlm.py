@@ -30,20 +30,20 @@ vocab_len, vocab = train_dataset.get_vocab()
 
 class RNNLM2Gram(nn.Module):
 
-    def __init__(self, vocab_size, embedding_dim, context_size):
-        super(RNNLM2Gram, self).__init__()
-        self.embeddings = nn.Embedding(vocab_size, embedding_dim)
-        self.basic_rnn = nn.LSTM(embedding_dim, rnn_neurons, rnn_layers)
-        self.FC = nn.Linear(rnn_neurons, vocab_size)
+  def __init__(self, vocab_size, embedding_dim, context_size):
+    super(RNNLM2Gram, self).__init__()
+    self.embeddings = nn.Embedding(vocab_size, embedding_dim)
+    self.basic_rnn = nn.LSTM(embedding_dim, rnn_neurons, rnn_layers)
+    self.FC = nn.Linear(rnn_neurons, vocab_size)
 
-    def forward(self, inputs):
-        embeds = self.embeddings(inputs).permute(1, 0, 2, 3)
-        embeds = embeds.view(embeds.size(0), embeds.size(1), -1)
-        out, _ = self.basic_rnn(embeds)
-        # print(out[-1, :, :])  为[batch_size, rnn_neurons]
-        out = self.FC(out[-1, :, :])  # 取最后一个序列，并将其塞入Linear.
-        probability = f.log_softmax(out, dim=1)
-        return probability
+  def forward(self, inputs):
+    embeds = self.embeddings(inputs).permute(1, 0, 2, 3)
+    embeds = embeds.view(embeds.size(0), embeds.size(1), -1)
+    out, _ = self.basic_rnn(embeds)
+    # print(out[-1, :, :])  为[batch_size, rnn_neurons]
+    out = self.FC(out[-1, :, :])  # 取最后一个序列，并将其塞入Linear.
+    probability = f.log_softmax(out, dim=1)
+    return probability
 
 
 loss_function = nn.NLLLoss()
@@ -52,32 +52,32 @@ model.to(device)
 optimizer = optimizer.Adam(model.parameters(), lr=learning_rate)
 
 for epoch in range(epochs):
-    total_loss = 0
-    model.train()
+  total_loss = 0
+  model.train()
 
-    train_dataset = MyDataSetRnn(flag, CONTEXT_SIZE)
+  train_dataset = MyDataSetRnn(flag, CONTEXT_SIZE)
 
-    with tqdm(train_dataset) as t:
-        t.set_description('Epoch {}/{}:'.format(epoch + 1, epochs))
-        for index, (context_tensor, target_tensor) in enumerate(t):
-            model.zero_grad()
-            context_tensor = context_tensor.view(1, context_tensor.size(0), -1)
-            context_tensor = context_tensor.to(device)
-            target_tensor = target_tensor.to(device)
-            result_prob = model(context_tensor)
-            loss = loss_function(result_prob, target_tensor)
-            loss.backward()
-            optimizer.step()
-            total_loss += loss.detach().item()
-            t.set_postfix(loss=total_loss)
+  with tqdm(train_dataset) as t:
+    t.set_description('Epoch {}/{}:'.format(epoch + 1, epochs))
+    for index, (context_tensor, target_tensor) in enumerate(t):
+      model.zero_grad()
+      context_tensor = context_tensor.view(1, context_tensor.size(0), -1)
+      context_tensor = context_tensor.to(device)
+      target_tensor = target_tensor.to(device)
+      result_prob = model(context_tensor)
+      loss = loss_function(result_prob, target_tensor)
+      loss.backward()
+      optimizer.step()
+      total_loss += loss.detach().item()
+      t.set_postfix(loss=total_loss)
 
 with open(en_vector_path if flag == 'en' else zh_vector_path, 'w') as file_object:
-    word2int = pre_process_en.get_word2int() if flag == 'en' else pre_process_zh.get_word2int()
-    for item in vocab:
-        file_object.write(item)
-        file_object.write(' ')
-        # TypeError: can't convert cuda:0 device type tensor to numpy.
-        # Use Tensor.cpu() to copy the tensor to host memory first.
-        file_object.write(str(model.embeddings.weight[word2int[item]].cpu().detach().numpy().tolist()))
-        file_object.write('\n')
+  word2int = pre_process_en.get_word2int() if flag == 'en' else pre_process_zh.get_word2int()
+  for item in vocab:
+    file_object.write(item)
+    file_object.write(' ')
+    # TypeError: can't convert cuda:0 device type tensor to numpy.
+    # Use Tensor.cpu() to copy the tensor to host memory first.
+    file_object.write(str(model.embeddings.weight[word2int[item]].cpu().detach().numpy().tolist()))
+    file_object.write('\n')
 torch.save(model, './result/rnn/result_model.model')

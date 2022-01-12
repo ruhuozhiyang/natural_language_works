@@ -4,8 +4,7 @@ from keras.utils.vis_utils import plot_model
 from image_classification.dataset import TrainData, ValidateData, TestData
 from image_classification.model import Image_CNN, Image_DNN
 from image_classification.utils.cyclic_lr import CyclicLR
-from image_classification.utils.draw_img import DrawImg
-from image_classification.utils.tools import ParamsHandle
+from image_classification.utils.tools import ParamsHandle, DrawImg
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--params_file', default='./params.json')

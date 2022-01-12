@@ -43,8 +43,19 @@ class Image_DNN:
 	"""
 	这是模型DNN的结构定义，用来进行图像分类。
 	"""
-	def __init__(self):
-		pass
+	def __init__(self, config):
+		self.img_width = config.img_width
+		self.img_height = config.img_height
+
+	def get_model_dnn(self):
+		model = Sequential()
+		model.add(Flatten(data_format='channels_last', input_shape=(self.img_width, self.img_height, 3)))
+		model.add(Dense(1024, activation='relu'))
+		model.add(Dense(512, activation='relu'))
+		model.add(Dense(256, activation='relu'))
+		model.add(Dense(2, activation='softmax'))
+
+		return model
 
 
 class Image_RNN:

@@ -1,5 +1,4 @@
 {
-    "filters_num": 64,
     "epochs": 1,
     "batch_size": 25,
 

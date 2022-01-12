@@ -30,49 +30,51 @@ test_data_path = '../data/test'
 # ToTensor已经将图像数据归一化到[0, 1]
 # Normalize将图像数据进一步调整到[-1, 1]
 train_transform = transforms.Compose([
-    transforms.RandomResizedCrop([img_width, ]),
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor(),
-    transforms.Normalize(means_3channels, std_3channels)
+  transforms.RandomResizedCrop([img_width, ]),
+  transforms.RandomHorizontalFlip(),
+  transforms.ToTensor(),
+  transforms.Normalize(means_3channels, std_3channels)
 ])
 validation_transform = transforms.Compose([
-    transforms.Resize([img_width, img_height]),
-    transforms.ToTensor(),
-    transforms.Normalize(means_3channels, std_3channels)
+  transforms.Resize([img_width, img_height]),
+  transforms.ToTensor(),
+  transforms.Normalize(means_3channels, std_3channels)
 ])
 
 # ImageFolder结合DataLoader导入数据集
 # DataLoader本质上是一个可迭代对象
 train_dataset = torchvision.datasets.ImageFolder(root=train_data_path, transform=train_transform)
 validation_dataset = torchvision.datasets.ImageFolder(
-    root=validation_data_path, transform=validation_transform)
+  root=validation_data_path, transform=validation_transform)
 train_loader = DataLoader(dataset=train_dataset, batch_size=per_batch_size, shuffle=True)
 validation_loader = DataLoader(dataset=validation_dataset, batch_size=per_batch_size, shuffle=False)
 
 
 # 定义模型
 class ImageRnn(nn.Module):
-    def __init__(self, batch_size, input_dim, out_dim, neurons, layers):
-        super(ImageRnn, self).__init__()
-        self.batch_size = batch_size  # 批量输入的大小
-        self.layers = layers  # RNN的层数
-        self.neurons = neurons  # 隐藏层权重数量
-        self.out_dim = out_dim  # 输出维度（也就是分类个数）
-        self.input_dim = input_dim  # 输入维度
+  def __init__(self, batch_size, input_dim, out_dim, neurons, layers):
+    super(ImageRnn, self).__init__()
+    self.batch_size = batch_size  # 批量输入的大小
+    self.layers = layers  # RNN的层数
+    self.neurons = neurons  # 隐藏层权重数量
+    self.out_dim = out_dim  # 输出维度（也就是分类个数）
+    self.input_dim = input_dim  # 输入维度
 
-        self.basic_rnn = nn.LSTM(self.input_dim, self.neurons, num_layers=self.layers)
-        self.FC = nn.Linear(self.neurons, self.out_dim)
+    self.basic_rnn = nn.LSTM(self.input_dim, self.neurons, num_layers=self.layers)
+    self.FC = nn.Linear(self.neurons, self.out_dim)
 
-    # 是对RNN的一层封装，自定义组合RNN。
-    def forward(self, data):
-        self.batch_size = data.size(0)
-        data = data.permute(1, 0, 2)  # 第一维度与第二维度换位
+  """
+  是对RNN的一层封装，自定义组合RNN。
+  """
+  def forward(self, data):
+    self.batch_size = data.size(0)
+    data = data.permute(1, 0, 2)  # 第一维度与第二维度换位
 
-        # 前向传播，rnn_out是128个序列的输出值。
-        rnn_out, _ = self.basic_rnn.forward(data)
-        # 取RNN的最后一个序列，然后求出每一类概率.
-        out = self.FC(rnn_out[-1, :, :])
-        return out.view(-1, self.out_dim)
+    # 前向传播，rnn_out是128个序列的输出值。
+    rnn_out, _ = self.basic_rnn.forward(data)
+    # 取RNN的最后一个序列，然后求出每一类概率.
+    out = self.FC(rnn_out[-1, :, :])
+    return out.view(-1, self.out_dim)
 
 
 model = ImageRnn(per_batch_size, InputDim, OutDim, Neurons, Layers).to(device)
@@ -81,44 +83,44 @@ optimizer = opt.Adam(model.parameters(), lr=0.0001)
 
 
 def get_accuracy(log_it, target, batch_size):
-    corrects = (torch.max(log_it, 1)[1].view(target.size()).data == target.data).sum()
-    accuracy = 100.0 * corrects / batch_size
-    return accuracy.item()
+  corrects = (torch.max(log_it, 1)[1].view(target.size()).data == target.data).sum()
+  accuracy = 100.0 * corrects / batch_size
+  return accuracy.item()
 
 
 def validation_accuracy():
-    test_acc = 0.0
-    for index1, (inputs, labels1) in enumerate(validation_loader):
-        labels1 = labels1.to(device)
-        inputs = inputs.view(inputs.size(0), 128, -1).to(device)
-        outputs1 = model(inputs)
-        batch_acc = get_accuracy(outputs1, labels1, per_batch_size)
-        print("Batch:{:0>2d}, Accuracy : {:<6.4f}%".format(index1, batch_acc))
-        test_acc = test_acc + batch_acc
-    return test_acc / index1
+  test_acc = 0.0
+  for index1, (inputs, labels1) in enumerate(validation_loader):
+    labels1 = labels1.to(device)
+    inputs = inputs.view(inputs.size(0), 128, -1).to(device)
+    outputs1 = model(inputs)
+    batch_acc = get_accuracy(outputs1, labels1, per_batch_size)
+    print("Batch:{:0>2d}, Accuracy : {:<6.4f}%".format(index1, batch_acc))
+    test_acc = test_acc + batch_acc
+  return test_acc / index1
 
 
-# 循环epoch个轮次
 for epoch in range(epochs):
-    train_running_loss = 0.0
-    train_acc = 0.0
-    model.train()  # 网络进入训练模式
+  train_running_loss = 0.0
+  train_acc = 0.0
+  model.train()  # 网络进入训练模式
 
-    # enumerate内置函数，同时遍历索引和元素
-    for index, (input_data, labels) in enumerate(train_loader):
-        optimizer.zero_grad()
+  """
+  enumerate是内置函数，同时遍历索引和元素。
+  """
+  for index, (input_data, labels) in enumerate(train_loader):
+    optimizer.zero_grad()
 
-        # print(input_data.size())  # torch.Size([30, 3, 128, 128])
-        input_data = input_data.view(input_data.size(0), 128, -1).to(device)
-        labels = labels.to(device)
-        outputs = model.forward(input_data)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-        train_running_loss = train_running_loss + loss.detach().item()
-        train_acc = train_acc + get_accuracy(outputs, labels, per_batch_size)
-    model.eval()
-    msg = '[======================]Epoch : {} | Loss : {:<6.4f} | Train Accuracy : {:<6.2f}%'
-    print(msg.format(epoch+1, train_running_loss / index, train_acc / index))
+    input_data = input_data.view(input_data.size(0), 128, -1).to(device)
+    labels = labels.to(device)
+    outputs = model.forward(input_data)
+    loss = criterion(outputs, labels)
+    loss.backward()
+    optimizer.step()
+    train_running_loss = train_running_loss + loss.detach().item()
+    train_acc = train_acc + get_accuracy(outputs, labels, per_batch_size)
+  model.eval()
+  msg = '[======================]Epoch : {} | Loss : {:<6.4f} | Train Accuracy : {:<6.2f}%'
+  print(msg.format(epoch + 1, train_running_loss / index, train_acc / index))
 
 print('Final Validation Accuracy : {:<6.4f}%'.format(validation_accuracy()))

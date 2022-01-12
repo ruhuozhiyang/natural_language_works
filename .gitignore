@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 image_classification/data/
-image_classification/CNN/result/
+image_classification/result
 
 word_embedding/result/
 word_embedding/data/

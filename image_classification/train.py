@@ -1,10 +1,10 @@
 import argparse
 import os
 from keras.utils.vis_utils import plot_model
-from image_classification.dataset import TrainData, ValidateData, TestData
-from image_classification.model import Image_CNN, Image_DNN
-from image_classification.utils.cyclic_lr import CyclicLR
-from image_classification.utils.tools import ParamsHandle, DrawImg
+from dataset import TrainData, ValidateData, TestData
+from model import Image_DNN, Image_CNN
+from utils.cyclic_lr import CyclicLR
+from utils.tools import DrawImg, ParamsHandle
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--params_file', default='./params.json')
